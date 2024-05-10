@@ -1,103 +1,109 @@
 import csv
 import matplotlib.pyplot as plt
 from os import path
+from enum import Enum
 
-path = 'konsumprisindeks.csv'
-data = []
-with open(path, "r") as f:
+#clean data, replace , with . in numbers. replace . with Nan
+""" data = []
+with open('konsumprisindeks.csv', "r", encoding='utf-8') as f:
     for line in f.readlines():
-        line.encode('utf-8').strip()
-        new_line = line.replace(',', '.')
-        data.append(new_line)
+        new_line1 = line.replace('.', 'NaN')
+        new_line2 = new_line1.replace(',', '.')
+        data.append(new_line2)
 
-with open(path, 'w') as file:
+with open('konsumprisindeks_ny.csv', 'w',encoding='utf-8') as file:
     for line in data:
-        file.write(line)
+        file.write(line) """
 
 class KonsumerPrisIndeks:
-    def __init__(self, aar, gjennomsnitt,jan,feb,mar,apr,mai,jun,jul,aug,sep,okt,nov,des):
-        self.aar = aar
+    def __init__(self, år, gjennomsnitt,months):
+        self.år = år
         self.gjennomsnitt = gjennomsnitt
-        self.jan = jan
-        self.feb = feb
-        self.mar = mar
-        self.apr = apr
-        self.mai = mai
-        self.jun = jun
-        self.jul = jul
-        self.aug = aug
-        self.sep = sep
-        self.okt = okt
-        self.nov = nov
-        self.des = des
-        self.months = [jan,feb,mar,apr,mai,jun,jul,aug,sep,okt,nov,des]
-
-
+        self.months = months
+        self.endring_gjennom_år = self.months[-1] - self.months[0]
+        
 kpis = [] 
 
 try:
-    with open("konsumprisindeks.csv") as f:
+    with open('konsumprisindeks_ny.csv', encoding='utf-8') as f:
         csv_leser = csv.reader(f, delimiter=";")
         overskrift = next(csv_leser)
-
-        # Henter kolonnenummerene til de ulike overskriftene
-        kol_år = overskrift.index('Aar')
-        kol_gjennomsnitt = overskrift.index("gjennomsnitt")
-        kol_jan = overskrift.index("Jan")
-        kol_feb = overskrift.index("Feb")
-        kol_mar = overskrift.index("Mar")
-        kol_apr = overskrift.index("Apr")
-        kol_mai = overskrift.index("Mai")
-        kol_jun = overskrift.index("Jun")
-        kol_jul = overskrift.index("Jul")
-        kol_aug = overskrift.index("Aug")
-        kol_sep = overskrift.index("Sep")
-        kol_okt = overskrift.index("Okt")
-        kol_nov = overskrift.index("Nov")
-        kol_des = overskrift.index("Des")
-      
+    
         for rad in csv_leser:
-            aar = rad[kol_år]
-            gjennomsnitt = float(rad[kol_gjennomsnitt])
-            jan = float(rad[kol_jan])   
-            feb = float(rad[kol_feb])
-            mar = float(rad[kol_mar])
-            apr = float(rad[kol_apr])
-            mai = float(rad[kol_mai])
-            jun = float(rad[kol_jun])
-            jul = float(rad[kol_jul])
-            aug = float(rad[kol_aug])
-            sep = float(rad[kol_sep])
-            okt = float(rad[kol_okt])
-            nov = float(rad[kol_nov])
-            des = float(rad[kol_des])
-            kpi = KonsumerPrisIndeks(aar=aar,gjennomsnitt=gjennomsnitt,jan=jan,feb=feb,mar=mar,apr=apr,mai=mai,jun=jun,jul=jul,aug=aug,sep=sep,okt=okt,nov=nov,des=des)
+            år = float(rad[overskrift.index("År")])
+            gjennomsnitt = float(rad[overskrift.index("gjennomsnitt")])
+            jan = float(rad[overskrift.index("Jan")])   
+            feb = float(rad[overskrift.index("Feb")])
+            mar = float(rad[overskrift.index("Mar")])
+            apr = float(rad[overskrift.index("Apr")])
+            mai = float(rad[overskrift.index("Mai")])
+            jun = float(rad[overskrift.index("Jun")])
+            jul = float(rad[overskrift.index("Jul")])
+            aug = float(rad[overskrift.index("Aug")])
+            sep = float(rad[overskrift.index("Sep")])
+            okt = float(rad[overskrift.index("Okt")])
+            nov = float(rad[overskrift.index("Nov")])
+            des = float(rad[overskrift.index("Des")])
+            months = [jan,feb,mar,apr,mai,jun,jul,aug,sep,okt,nov,des]
+            kpi = KonsumerPrisIndeks(år=år,
+                                     gjennomsnitt=gjennomsnitt,
+                                     months=months)
             kpis.append(kpi)
-       #     deltakere.append(Deltaker(lagnavn, totaltid, plassering, klassenavn, type_lag, nasjon))
 except FileNotFoundError:
-    print("Sørg for at du kjører filen fra inne i holmenkollstafetten-mappen!")
+    print("file not found")
     exit()       
 
 my_max = 0
+my_min = 1000
+
 for kpi in kpis:
     temp_max = max(kpi.months)
     if temp_max > my_max:
         my_max = temp_max
-print(my_max)
+    
+    temp_min = min(kpi.months)
+    if temp_min < my_min:
+        my_min = temp_min
+
+#alternative
+#my_max = max(max(kpi.months) for kpi in kpis)
+#my_min = min(min(kpi.months) for kpi in kpis) 
+
+
+max_kpi_years = []
+min_kpi_years = []
 for kpi in kpis:
     if my_max in kpi.months:
-        print(kpi.aar)
-        print(kpi.months)
-
-my_min = my_max + 1
-for kpi in kpis:
-    temp_min = min(kpi.months)
-    if temp_min < my_min and temp_min != -1:
-        my_min = temp_min
-print(my_min)
-
-for kpi in kpis:
+        max_kpi_years.append(kpi)            
     if my_min in kpi.months:
-        print(kpi.aar)
-        print(kpi.months)
+        min_kpi_years.append(kpi)
 
+class Months(Enum):
+    jan = 0
+    feb = 1
+    mar = 2
+    apr = 3
+    mai = 4
+    jun = 5
+    jul = 6
+    aug = 7
+    sep = 8
+    okt = 9
+    nov = 10
+    des = 11
+
+def print_months_and_years(value, value_type, years: KonsumerPrisIndeks):
+    for year in years:
+        print('in ' + str(year.år) + ' the kpi had a ' + value_type + ' value of ' + str(value) + ' in the following months: ')
+        index = 0
+        month_list = []
+        for index, month in enumerate(year.months):
+            if month == value:
+                month_list.append(Months(index).name)
+        print(str(month_list)  + '\n')
+
+print_months_and_years(my_min, 'min', min_kpi_years)
+print_months_and_years(my_max, 'max', max_kpi_years)
+
+max_difference = max(kpis[1:], key=lambda kpi: kpi.endring_gjennom_år)
+print(max_difference.år)
