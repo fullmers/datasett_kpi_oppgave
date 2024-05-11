@@ -96,19 +96,8 @@ def finne_max_og_min_kpi(kpis: list[KonsumerPrisIndeks]):
     return (min_max, min_min)
 
 #alternative
-#my_max = max(max(kpi.months) for kpi in kpis)
-#my_min = min(min(kpi.months) for kpi in kpis) 
-
-
-""" def skriv_år_og_måneder_med_verdi(søk_verdi, verdi_type, kpis: list[KonsumerPrisIndeks]):
-    ''' Denne viser år som har gitt max eller min KPI inne i også skriver det ut med måneder som har gitt verdien. '''
-    for kpi in kpis:
-        print('I ' + f"{kpi.år:.0f}" + ' hadde kpi en ' + verdi_type + ' verdi av ' + str(søk_verdi) + ' i den følgende måneder: ')
-        month_list = []
-        for month, kpi_value in kpi.måneder.items(): 
-            if kpi_value == søk_verdi:
-                month_list.append(month)
-        print(str(month_list)  + '\n') """
+#my_max = max(max(kpi.måneder.values()) for kpi in kpis)
+#my_min = min(min(kpi.måneder.values()) for kpi in kpis) 
 
 def samle_og_skrive_max_min(kpis: list[KonsumerPrisIndeks]):
     '''Dette finner min og max KPI verdiene i gitt data og skriver ut hvilke år og måneder verdiene finnes i.'''
@@ -146,7 +135,7 @@ def år_med_største_forskjell(kpis: list[KonsumerPrisIndeks]):
 
 # 2 plotter
 def lag_plotter(kpis: list[KonsumerPrisIndeks]):
-    år = [kpi.år for kpi in kpis][1:]
+    år = [kpi.år for kpi in kpis][1:] #list av år untatt 2022
     gjennomsnitt_kpi_list = [kpi.gjennomsnitt for kpi in kpis][1:]
 
     plt.figure(1)
