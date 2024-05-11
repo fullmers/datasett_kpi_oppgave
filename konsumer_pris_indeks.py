@@ -3,84 +3,86 @@ import matplotlib.pyplot as plt
 from os import path
 import math
 
-ren_data_fil = 'konsumprisindeks_ny.csv'
+vasket_data_fil = 'konsumprisindeks_ny.csv'
 opprinelig_data_fil = 'konsumprisindeks.csv'
+def vask_data():
+    ''' vask_data() formater opprinelige input data ("data cleaning" på engelsk).
+    Det skulle kjøres bare en gang. Hvis fil med vasket data fines så ikke trenges å kjøre prosessen igjen'''
+    if path.isfile(vasket_data_fil):
+        print("data allerede vasket")
+        return
+    print("vasker data")
+    data = []
+    try:
+        with open(opprinelig_data_fil, "r", encoding='utf-8') as f:
+            for linje in f.readlines():
+                # . => NaN så Python kan håndtere alle data som float 
+                ny_linje1 = linje.replace('.', 'NaN')
+                # , => .  så Python forstår desimaltall i data
+                ny_linje2 = ny_linje1.replace(',', '.')
+                data.append(ny_linje2)
+    except IOError as e:
+        print("I/O error: {0}, {1}".format(e.strerror, opprinelig_data_fil))
+        exit()
 
-# rener data:
-# 1) . => NaN så Python kan håndtere alle data som float 
-# 2) , => .  så Python forstår desimaltall i data
-# 3) skriv oppdaterte linje til en ny fil 
-def ren_data():
-    # ren data, men bare en gang.
-    #hvis fil fines ikke trenger å kjøre ren prosess igjen
-    if not path.isfile(ren_data_fil): 
-        print("rener data")
-        data = []
-        try:
-            with open(opprinelig_data_fil, "r", encoding='utf-8') as f:
-                for linje in f.readlines():
-                    ny_linje1 = linje.replace('.', 'NaN')
-                    ny_linje2 = ny_linje1.replace(',', '.')
-                    data.append(ny_linje2)
-        except IOError as e:
-            print("I/O error: {0}, {1}".format(e.strerror, opprinelig_data_fil))
-            exit()
-
-        try:
-            with open(ren_data_fil, 'w',encoding='utf-8') as file:
-                for line in data:
-                    file.write(line)
-        except IOError as e:
-            print("I/O error: {0}, {1}".format(e.strerror, ren_data))
-            exit()
-    else:
-        print("data allerede rent") 
-
-
-ren_data()
+    try:
+        with open(vasket_data_fil, 'w',encoding='utf-8') as file:
+            for line in data:
+                file.write(line)
+    except IOError as e:
+        print("I/O error: {0}, {1}".format(e.strerror, vasket_data_fil))
+        exit()
 
 class KonsumerPrisIndeks:
-    def __init__(self, år, gjennomsnitt,måneder: dict):
+    '''KonsumerPrisIndeks (KPI) inneholder alle data fra input csv, som er 
+    år, gjenommsnitt KPI og KPI for hvert måned i året. 
+    I tillegg så er det "endring_gjennom_år" som er endring i KPI fra jan til des i året. Dette felt er ikke i opprinelige data men er nyttig for noe spørsmål om det. 
+
+    Det har ingen funksjoner bortsett fra init. Så det funker i praksis som en "data class" uten @dataclass decorator.
+    '''
+    def __init__(self, år: int, gjennomsnitt: float, måneder: dict):
         self.år = år
         self.gjennomsnitt = gjennomsnitt
         self.måneder = måneder
         self.endring_gjennom_år = abs(self.måneder.get("des") - self.måneder.get("jan"))
 
 #lager list av KonsumerPrisIndeks objekter fra data
-kpis = [] 
-try:
-    with open(ren_data_fil, encoding='utf-8') as f:
-        csv_leser = csv.reader(f, delimiter=";")
-        overskrift = next(csv_leser)
-    
-        for rad in csv_leser:
-            år = float(rad[overskrift.index("År")])
-            gjennomsnitt = float(rad[overskrift.index("gjennomsnitt")])
-            months = {"jan":float(rad[overskrift.index("Jan")]),
-                      "feb":float(rad[overskrift.index("Feb")]),
-                      "mar":float(rad[overskrift.index("Mar")]),
-                      "apr":float(rad[overskrift.index("Apr")]),
-                      "mai":float(rad[overskrift.index("Mai")]),
-                      "jun":float(rad[overskrift.index("Jun")]),
-                      "jul":float(rad[overskrift.index("Jul")]),
-                      "aug":float(rad[overskrift.index("Aug")]),
-                      "sep":float(rad[overskrift.index("Sep")]),
-                      "okt":float(rad[overskrift.index("Okt")]),
-                      "nov":float(rad[overskrift.index("Nov")]),
-                      "des":float(rad[overskrift.index("Des")])} 
-                      
-            kpi = KonsumerPrisIndeks(år=år,
-                            gjennomsnitt=gjennomsnitt,
-                            måneder=months)
-            kpis.append(kpi)
-except IOError as e:
-   print("I/O error: {0}, {1}".format(e.strerror, ren_data))
-   exit() 
+def lager_KPI_objekt_list_fra_data() -> list[KonsumerPrisIndeks]:
+    kpis = []
+    try:
+        with open(vasket_data_fil, encoding='utf-8') as f:
+            csv_leser = csv.reader(f, delimiter=";")
+            overskrift = next(csv_leser)
+        
+            for rad in csv_leser:
+                år = float(rad[overskrift.index("År")])
+                gjennomsnitt = float(rad[overskrift.index("gjennomsnitt")])
+                months = {"jan":float(rad[overskrift.index("Jan")]),
+                        "feb":float(rad[overskrift.index("Feb")]),
+                        "mar":float(rad[overskrift.index("Mar")]),
+                        "apr":float(rad[overskrift.index("Apr")]),
+                        "mai":float(rad[overskrift.index("Mai")]),
+                        "jun":float(rad[overskrift.index("Jun")]),
+                        "jul":float(rad[overskrift.index("Jul")]),
+                        "aug":float(rad[overskrift.index("Aug")]),
+                        "sep":float(rad[overskrift.index("Sep")]),
+                        "okt":float(rad[overskrift.index("Okt")]),
+                        "nov":float(rad[overskrift.index("Nov")]),
+                        "des":float(rad[overskrift.index("Des")])} 
+                        
+                kpi = KonsumerPrisIndeks(år=år,
+                                gjennomsnitt=gjennomsnitt,
+                                måneder=months)
+                kpis.append(kpi)
+            return kpis
+    except IOError as e:
+        print("I/O error: {0}, {1}".format(e.strerror, vask_data))
+        exit() 
 
 
-#1 - finner max og min KPI og tilhørende år og måneder
- 
-def fine_max_og_min_kpi():
+# 1a
+def finne_max_og_min_kpi(kpis: list[KonsumerPrisIndeks]):
+    ''' Finner max og min KPI verdi fra hele datasett'''
     min_max = 0
     min_min = 1000
     for kpi in kpis:
@@ -97,18 +99,20 @@ def fine_max_og_min_kpi():
 #my_max = max(max(kpi.months) for kpi in kpis)
 #my_min = min(min(kpi.months) for kpi in kpis) 
 
-#samle år som har max eller min kpi inne i
-def skriv_år_og_måneder_med_verdi(søk_verdi, verdi_type, kpis):
+
+""" def skriv_år_og_måneder_med_verdi(søk_verdi, verdi_type, kpis: list[KonsumerPrisIndeks]):
+    ''' Denne viser år som har gitt max eller min KPI inne i også skriver det ut med måneder som har gitt verdien. '''
     for kpi in kpis:
         print('I ' + f"{kpi.år:.0f}" + ' hadde kpi en ' + verdi_type + ' verdi av ' + str(søk_verdi) + ' i den følgende måneder: ')
         month_list = []
         for month, kpi_value in kpi.måneder.items(): 
             if kpi_value == søk_verdi:
                 month_list.append(month)
-        print(str(month_list)  + '\n')
+        print(str(month_list)  + '\n') """
 
-def samle_og_skrive_max_min_():
-    (min_max, min_min) = fine_max_og_min_kpi()
+def samle_og_skrive_max_min(kpis: list[KonsumerPrisIndeks]):
+    '''Dette finner min og max KPI verdiene i gitt data og skriver ut hvilke år og måneder verdiene finnes i.'''
+    (min_max, min_min) = finne_max_og_min_kpi(kpis)
     max_kpi_år_list = []
     min_kpi_år_list = []
     for kpi in kpis:
@@ -116,21 +120,32 @@ def samle_og_skrive_max_min_():
             max_kpi_år_list.append(kpi)            
         if min_min in list(kpi.måneder.values()):
             min_kpi_år_list.append(kpi)
-    skriv_år_og_måneder_med_verdi(min_max, 'max', max_kpi_år_list)
-    skriv_år_og_måneder_med_verdi(min_min, 'min', min_kpi_år_list)
 
-samle_og_skrive_max_min_()
+    for kpi in max_kpi_år_list:
+        print('I ' + f'{kpi.år:.0f}' + ' hadde KPI en max verdi av ' + str(min_max) + ' i de følgende månedene: ')
+        max_month_list = []
+        for month, kpi_value in kpi.måneder.items(): 
+            if kpi_value == min_max:
+                max_month_list.append(month)
+        print(max_month_list)
 
-#1b - finne år med største forskell mellom jan og des
+    for kpi in min_kpi_år_list:
+        print('I ' + f"{kpi.år:.0f}" + ' hadde KPI en min verdi av ' + str(min_min) + ' i de følgende månedene: ')
+        min_month_list = []
+        for month, kpi_value in kpi.måneder.items(): 
+            if kpi_value == min_min:
+                min_month_list.append(month)
+        print(min_month_list)
 
-def år_med_største_forskjell():
-    max_forskjell = max(kpis[1:], key=lambda kpi: kpi.endring_gjennom_år)
-    print(str(int(max_forskjell.år)) + " var året med største kpi forskjell fra jan til des. Forskellen var "+ f'{max_forskjell.endring_gjennom_år:.2f}')
-#år_med_største_forskjell()
-
+#1b
+def år_med_største_forskjell(kpis: list[KonsumerPrisIndeks]):
+    '''Dette finner år med største forskjell mellom januar og desember og skriver det ut.'''
+    kpis_uten_2022 = kpis[1:]
+    max_forskjell = max(kpis_uten_2022, key=lambda kpi: kpi.endring_gjennom_år)
+    print(str(int(max_forskjell.år)) + " var året med største KPI forskjell fra jan til des. Forskellen var "+ f'{max_forskjell.endring_gjennom_år:.2f}')
 
 # 2 plotter
-def lag_plotter():
+def lag_plotter(kpis: list[KonsumerPrisIndeks]):
     år = [kpi.år for kpi in kpis][1:]
     gjennomsnitt_kpi_list = [kpi.gjennomsnitt for kpi in kpis][1:]
 
@@ -156,28 +171,34 @@ def lag_plotter():
     plt.bar(month_label_2022, month_data_2022)
     plt.show()
 
-# lag_plotter()
-
 #3a kalkulator
-def gjennomsnitt_kpi_i_år(kpi_i_år):
+def gjennomsnitt_kpi_i_år(kpi_i_år, kpis: list[KonsumerPrisIndeks]):
+    ''' Dette finner gjennomsnittlig KPI i et gitt år'''
     for kpi in kpis:
+        # hvis kpis hadde vært et map fra år til KPI, kunne vi her bare slått
+        # opp, i stedet for å iterere gjennom lista
         if int(kpi.år) == int(kpi_i_år):
             return kpi.gjennomsnitt
     return None
 
-def pris_i_annet_år(år_1, år_2,pris_i_år_2):
-    try:
-        gjennomsnitt_kpi_i_år_1 = gjennomsnitt_kpi_i_år(år_1)
-        gjennomsnitt_kpi_i_år_2 = gjennomsnitt_kpi_i_år(år_2)
-        pris_i_år_1 = pris_i_år_2 * gjennomsnitt_kpi_i_år_1 / gjennomsnitt_kpi_i_år_2
-    except Exception:
-        print('ikke funnet år i data')
-        exit()
-
+def pris_i_annet_år(år_1, år_2,pris_i_år_2, kpis: list[KonsumerPrisIndeks]):
+    '''Gitt pris i et år og et annet år, finner dette pris i annet året'''
+    gjennomsnitt_kpi_i_år_1 = gjennomsnitt_kpi_i_år(år_1, kpis)
+    gjennomsnitt_kpi_i_år_2 = gjennomsnitt_kpi_i_år(år_2, kpis)
+    pris_i_år_1 = pris_i_år_2 * gjennomsnitt_kpi_i_år_1 / gjennomsnitt_kpi_i_år_2
+    print('I ' + str(år_1) + ' kostet noe ' + f'{pris_i_år_1:.2f}'  + ' som kostet ' + f'{pris_i_år_2:.2f}' + ' i ' + str(år_2) )
     return pris_i_år_1
 
-check_kpi_i_år_2000 = gjennomsnitt_kpi_i_år(2000)
-print(check_kpi_i_år_2000)
+def main():
+    vask_data()
+    kpis = lager_KPI_objekt_list_fra_data()
 
-check_pris_i_annet_år =pris_i_annet_år(2010,2000,45)
-print(check_pris_i_annet_år)
+    finne_max_og_min_kpi(kpis)
+    samle_og_skrive_max_min(kpis)
+
+    år_med_største_forskjell(kpis)
+    #lag_plotter(kpis)
+
+    pris_i_annet_år(år_1=2010, år_2=2000, pris_i_år_2=45, kpis=kpis)
+
+main()
