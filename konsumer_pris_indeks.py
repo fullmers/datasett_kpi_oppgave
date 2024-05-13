@@ -6,12 +6,12 @@ import math
 vasket_data_fil = 'konsumprisindeks_ny.csv'
 opprinelig_data_fil = 'konsumprisindeks.csv'
 def vask_data():
-    ''' vask_data() formater opprinelige input data ("data cleaning" på engelsk).
-    Det skulle kjøres bare en gang. Hvis fil med vasket data fines så ikke trenges å kjøre prosessen igjen'''
+    '''vask_data() formater opprinelige input data ("data cleaning" på engelsk).
+    Det skulle kjøres bare en gang. Hvis fil med vasket data fines så ikke trenges å kjøre prosessen igjen.'''
     if path.isfile(vasket_data_fil):
-        print("data allerede vasket")
+        print("Data allerede vasket")
         return
-    print("vasker data")
+    print("Vasker data...")
     data = []
     try:
         with open(opprinelig_data_fil, "r", encoding='utf-8') as f:
@@ -156,21 +156,21 @@ def lag_plotter(kpis: list[KonsumerPrisIndeks]):
     plt.title("Konsumerprisindeks (KPI) i 2022")
     plt.xlabel("måned")
     plt.ylabel("KPI")
-    plt.ylim(115,130)
+    #plt.ylim(115,130)
     plt.bar(month_label_2022, month_data_2022)
     plt.show()
 
-#3a kalkulator
-def gjennomsnitt_kpi_i_år(kpi_i_år, kpis: list[KonsumerPrisIndeks]):
+#3 kalkulator
+def gjennomsnitt_kpi_i_år(søk_år: int, kpis: list[KonsumerPrisIndeks]):
     ''' Dette finner gjennomsnittlig KPI i et gitt år'''
     for kpi in kpis:
         # hvis kpis hadde vært et map fra år til KPI, kunne vi her bare slått
         # opp, i stedet for å iterere gjennom lista
-        if int(kpi.år) == int(kpi_i_år):
+        if int(kpi.år) == int(søk_år):
             return kpi.gjennomsnitt
     return None
 
-def pris_i_annet_år(år_1, år_2,pris_i_år_2, kpis: list[KonsumerPrisIndeks]):
+def pris_i_annet_år(år_1: int, år_2: int,pris_i_år_2: float, kpis: list[KonsumerPrisIndeks]):
     '''Gitt pris i et år og et annet år, finner dette pris i annet året'''
     gjennomsnitt_kpi_i_år_1 = gjennomsnitt_kpi_i_år(år_1, kpis)
     gjennomsnitt_kpi_i_år_2 = gjennomsnitt_kpi_i_år(år_2, kpis)
@@ -182,12 +182,17 @@ def main():
     vask_data()
     kpis = lager_KPI_objekt_list_fra_data()
 
+    #1a
     finne_max_og_min_kpi(kpis)
     samle_og_skrive_max_min(kpis)
 
+    #1b
     år_med_største_forskjell(kpis)
-    #lag_plotter(kpis)
 
+    #2a og b
+    lag_plotter(kpis)
+
+    #3
     pris_i_annet_år(år_1=2010, år_2=2000, pris_i_år_2=45, kpis=kpis)
 
 main()
